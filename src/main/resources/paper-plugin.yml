@@ -1,0 +1,11 @@
+name: chestshop-finder
+version: '${version}'
+main: io.github.md5sha256.chestshopFinder.ChestshopFinder
+api-version: '1.21.8'
+authors: [ md5sha256 ]
+dependencies:
+  server:
+    ChestShop:
+      join-classpath: true
+      load: OMIT
+      required: true

@@ -1,0 +1,47 @@
+plugins {
+    java
+    id("xyz.jpenilla.run-paper") version "2.3.1"
+}
+
+group = "io.github.md5sha256"
+version = "1.0-SNAPSHOT"
+
+repositories {
+    mavenCentral()
+    maven {
+        name = "papermc-repo"
+        url = uri("https://repo.papermc.io/repository/maven-public/")
+    }
+    maven {
+        name = "minebench-repo"
+        url = uri("https://repo.minebench.de/")
+    }
+}
+
+dependencies {
+    compileOnly("io.papermc.paper:paper-api:1.21.8-R0.1-SNAPSHOT")
+    compileOnly("com.acrobot.chestshop:chestshop:3.12.2")
+}
+
+
+val targetJavaVersion = 21
+
+java.toolchain.languageVersion.set(JavaLanguageVersion.of(targetJavaVersion))
+
+tasks {
+    compileJava {
+        options.release.set(targetJavaVersion)
+    }
+    processResources {
+        filesMatching("paper-plugin.yml") {
+            expand("version" to project.version)
+        }
+    }
+    runServer {
+        // Configure the Minecraft version for our task.
+        // This is the only required configuration besides applying the plugin.
+        // Your plugin"s jar (or shadowJar if present) will be used automatically.
+        minecraftVersion("1.21.8")
+    }
+}
+
