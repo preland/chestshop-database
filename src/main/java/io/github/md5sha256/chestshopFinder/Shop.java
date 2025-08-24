@@ -16,4 +16,9 @@ public record Shop(
         int quantity
 ) {
 
+    public Shop {
+        if (buyPrice == null && sellPrice == null) {
+            throw new IllegalArgumentException("Shop cannot have both buyPrice and sellPrice be null!");
+        }
+    }
 }

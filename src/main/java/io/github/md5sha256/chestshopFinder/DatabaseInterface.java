@@ -3,23 +3,39 @@ package io.github.md5sha256.chestshopFinder;
 import org.bukkit.inventory.ItemStack;
 
 import javax.annotation.Nonnull;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 
 public interface DatabaseInterface {
 
-    @Nonnull
-    CompletableFuture<Void> registerShop(@Nonnull Shop shop);
+    void initializeDatabase(@Nonnull Connection connection) throws SQLException;
 
     @Nonnull
-    CompletableFuture<Void> deleteShop(@Nonnull UUID world, int posX, int posY, int posZ);
+    Map<String, Integer> knownItemCodes(@Nonnull Connection connection) throws SQLException;
+
+    void registerShops(@Nonnull Connection connection, @Nonnull List<Shop> shops) throws SQLException;
+
+
+    void deleteShop(@Nonnull Connection connection, @Nonnull UUID world, int posX, int posY, int posZ)
+            throws SQLException;
 
     @Nonnull
-    CompletableFuture<List<Shop>> getShopsWithItemInWorld(
+    List<Shop> getShopsWithItemInWorld(
+            @Nonnull Connection connection,
             @Nonnull UUID world,
             @Nonnull ShopType shopType,
-            @Nonnull ItemStack item
-    );
+            int itemId
+    ) throws SQLException;
+
+    @Nonnull
+    List<Shop> getShopsWithItem(
+            @Nonnull Connection connection,
+            @Nonnull UUID world,
+            @Nonnull ShopType shopType,
+            int itemId
+    ) throws SQLException;
 
 }
