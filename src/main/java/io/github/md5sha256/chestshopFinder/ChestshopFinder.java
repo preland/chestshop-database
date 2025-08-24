@@ -7,7 +7,8 @@ public final class ChestshopFinder extends JavaPlugin {
     @Override
     public void onEnable() {
         // Plugin startup logic
-        getServer().getPluginManager().registerEvents(new ChunkListener(getLogger(), getServer(), null, null), this);
+        UnsafeChestShopSign.init();
+        // getServer().getPluginManager().registerEvents(new ChunkListener(getLogger(), getServer(), null, null), this);
         getLogger().info("Plugin enabled");
     }
 
