@@ -46,7 +46,7 @@ tasks {
             // Chestshop #445
             url("https://ci.minebench.de/job/ChestShop-3/445/artifact/target/ChestShop.jar")
             // EssX
-            url("https://ci.ender.zone/job/EssentialsX/lastSuccessfulBuild/artifact/jars/EssentialsX-2.22.0-dev+19-7bc91f1.jar")
+            url("https://ci.ender.zone/job/EssentialsX/1735/artifact/jars/EssentialsX-2.22.0-dev+40-150dabb.jar")
             // Vault
             url("https://mediafilez.forgecdn.net/files/3007/470/Vault.jar")
         }

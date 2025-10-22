@@ -1,5 +1,7 @@
 package io.github.md5sha256.chestshopFinder;
 
+import org.bukkit.Bukkit;
+import org.bukkit.World;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
@@ -14,6 +16,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 public class SqliteDatabaseInterface implements DatabaseInterface {
@@ -153,6 +156,7 @@ public class SqliteDatabaseInterface implements DatabaseInterface {
             FROM Shop
             WHERE
                 world_uuid = ? AND item_id = ?
+            LIMIT 1;
             """;
 
     private static final String SELECT_SELL_SHOP_BY_WORLD_AND_ITEM = """
@@ -299,13 +303,27 @@ public class SqliteDatabaseInterface implements DatabaseInterface {
         return List.of();
     }
 
-    private List<Shop> getAnyShop(
+    private Optional<Shop> getAnyShop(
             @Nonnull Connection connection,
             @Nonnull UUID world,
             int itemId) throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement(SELECT_ANY_SHOP_BY_WORLD_AND_ITEM)) {
             statement.setBytes(1, toBytes(world));
             statement.setInt(2, itemId);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    int posX = resultSet.getInt(1);
+                    int posY = resultSet.getInt(2);
+                    int posZ = resultSet.getInt(3);
+                    String ownerName = resultSet.getString(4);
+                    Double buyPrice = resultSet.getObject(5, Double.class);
+                    Double sellPrice = resultSet.getObject(6, Double.class);
+                    int quantity = resultSet.getInt(7);
+                    Shop shop = new Shop(world, posX, posY, posZ, itemId, ownerName, buyPrice, sellPrice, quantity);
+                    return Optional.of(shop);
+                }
+            }
         }
+        return Optional.empty();
     }
 }
