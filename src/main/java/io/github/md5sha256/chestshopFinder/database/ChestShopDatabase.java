@@ -2,25 +2,37 @@ package io.github.md5sha256.chestshopFinder.database;
 
 import com.Acrobot.Breeze.Utils.PriceUtil;
 import com.Acrobot.ChestShop.Signs.ChestShopSign;
+import io.github.md5sha256.chestshopFinder.ChestShopState;
+import io.github.md5sha256.chestshopFinder.model.ChestshopItem;
+import io.github.md5sha256.chestshopFinder.model.HydratedShop;
 import io.github.md5sha256.chestshopFinder.util.BlockPosition;
+import io.github.md5sha256.chestshopFinder.util.InventoryUtil;
+import org.bukkit.block.Container;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import javax.annotation.Nonnull;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Iterator;
 
-public class ChestShopDatabase {
+public record ChestShopDatabase(@Nonnull ChestShopState shopState) {
 
-    private final Map<String, Integer> itemCodeLookup = new HashMap<>();
 
-    public void registerShop(@Nonnull ItemStack itemStack,
-                       @Nonnull BlockPosition position,
-                       @Nonnull String itemCode,
-                       @Nonnull String[] lines) {
-        byte[] bytes = itemStack.serializeAsBytes();
-        bytes[0] = 0;
+    private static double toDouble(BigDecimal decimal) {
+        return decimal.setScale(4, RoundingMode.HALF_UP)
+                .stripTrailingZeros()
+                .doubleValue();
+    }
+
+    public void registerShop(
+            @Nonnull BlockPosition position,
+            @Nonnull ItemStack itemStack,
+            @Nonnull String itemCode,
+            @Nonnull String[] lines,
+            @Nonnull Container container
+    ) {
+        ChestshopItem item = new ChestshopItem(itemStack, itemCode);
         String ownerName = ChestShopSign.getOwner(lines);
         String priceLine = ChestShopSign.getPrice(lines);
         BigDecimal buyPriceDecimal = PriceUtil.getExactBuyPrice(priceLine);
@@ -30,12 +42,19 @@ public class ChestShopDatabase {
         Double sellPrice = sellPriceDecimal.equals(PriceUtil.NO_PRICE) ? null : toDouble(
                 sellPriceDecimal);
         int quantity = ChestShopSign.getQuantity(lines);
-    }
-
-    private double toDouble(BigDecimal decimal) {
-        return decimal.setScale(4, RoundingMode.HALF_UP)
-                .stripTrailingZeros()
-                .doubleValue();
+        int stock = InventoryUtil.countItems(itemStack, container.getInventory());
+        HydratedShop shop = new HydratedShop(
+                position.world(),
+                position.x(),
+                position.y(),
+                position.z(),
+                item,
+                ownerName,
+                buyPrice,
+                sellPrice,
+                quantity,
+                stock);
+        this.shopState.queueShopCreation(shop);
     }
 
 

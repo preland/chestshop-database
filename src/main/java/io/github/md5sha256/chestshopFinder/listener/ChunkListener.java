@@ -1,6 +1,7 @@
 package io.github.md5sha256.chestshopFinder.listener;
 
 import com.Acrobot.ChestShop.Signs.ChestShopSign;
+import com.Acrobot.ChestShop.Utils.uBlock;
 import io.github.md5sha256.chestshopFinder.ItemDiscoverer;
 import io.github.md5sha256.chestshopFinder.database.ChestShopDatabase;
 import io.github.md5sha256.chestshopFinder.util.BlockPosition;
@@ -9,6 +10,7 @@ import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Server;
 import org.bukkit.Tag;
 import org.bukkit.block.BlockState;
+import org.bukkit.block.Container;
 import org.bukkit.block.Sign;
 import org.bukkit.block.sign.Side;
 import org.bukkit.event.EventHandler;
@@ -66,9 +68,14 @@ public class ChunkListener implements Listener {
                     sign.getX(),
                     sign.getY(),
                     sign.getZ());
+            Container container = uBlock.findConnectedContainer(sign);
+            if (container == null) {
+                continue;
+            }
+            container.getInventory().getContents();
             String itemCode = ChestShopSign.getItem(lines);
             this.discoverer.discoverItemCode(itemCode,
-                    item -> this.database.registerShop(item, position, itemCode, lines));
+                    item -> this.database.registerShop(position, item, itemCode, lines, container));
         }
     }
 

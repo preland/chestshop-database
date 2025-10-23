@@ -20,11 +20,12 @@ public class MariaDatabaseUtil {
                         owner_name AS ownerName,
                         buy_price AS buyPrice,
                         sell_price AS sellPrice,
-                        quantity
+                        quantity,
+                        stock
                         """)
                 .FROM("Shop")
                 .WHERE("item_code = #{item_code}")
-                .applyIf(shopType == ShopType.BUY, sql -> sql.WHERE("buy_price IS NOT NULL"))
+                .applyIf(shopType == ShopType.BUY, sql -> sql.WHERE("buy_price IS NOT NULL", "stock > 0"))
                 .applyIf(shopType == ShopType.SELL, sql -> sql.WHERE("sell_price IS NOT NULL"))
                 .toString();
     }
@@ -43,7 +44,8 @@ public class MariaDatabaseUtil {
                         owner_name AS ownerName,
                         buy_price AS buyPrice,
                         sell_price AS sellPrice,
-                        quantity
+                        quantity,
+                        stock
                         """)
                 .FROM("Shop")
                 .WHERE("item_code = #{item_code}", "world_uuid = #{world_uuid)}")
@@ -79,7 +81,8 @@ public class MariaDatabaseUtil {
                                 owner_name AS ownerName,
                                 buy_price AS buyPrice,
                                 sell_price AS sellPrice,
-                                quantity
+                                quantity,
+                                stock
                                 """)
                         .FROM("Shop")
                         .WHERE("item_code = #{item_code}", "world_uuid = #{world_uuid)}")

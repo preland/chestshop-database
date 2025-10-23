@@ -15,7 +15,8 @@ public record Shop(
         @Nonnull String ownerName,
         @Nullable Double buyPrice,
         @Nullable Double sellPrice,
-        int quantity
+        int quantity,
+        int stock
 ) {
 
     public Shop {

@@ -16,6 +16,7 @@ CREATE TABLE Shop
     buy_price    DECIMAL(10, 2),
     sell_price   DECIMAL(10, 2),
     quantity     INT          NOT NULL,
+    stock        INT          NOT NULL,
     last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (world_uuid, pos_x, pos_y, pos_z),
     INDEX `idx_shop_item_code` (item_code)
@@ -26,6 +27,8 @@ ALTER TABLE Shop
         CHECK (buy_price IS NOT NULL OR sell_price IS NOT NULL),
     ADD CONSTRAINT chk_quantity_greater_than_zero
         CHECK (quantity > 0),
+    ADD CONSTRAINT chk_stock_non_negative
+        CHECK (stock >= 0),
     ADD CONSTRAINT fk_shop_item_item_code
         FOREIGN KEY (`item_code`) REFERENCES `Item` (`item_code`) ON DELETE CASCADE
 ;

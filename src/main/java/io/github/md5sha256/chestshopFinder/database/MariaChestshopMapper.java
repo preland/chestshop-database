@@ -48,6 +48,7 @@ public interface MariaChestshopMapper extends DatabaseInterface {
             @buy_price = #{buy_price};
             @sell_price = #{sell_price};
             @quantity = #{quantity};
+            @stock = #{stock};
             INSERT INTO Shop (world_uuid,
                               pos_x,
                               pos_y,
@@ -56,13 +57,15 @@ public interface MariaChestshopMapper extends DatabaseInterface {
                               owner_name,
                               buy_price,
                               sell_price,
-                              quantity)
-            VALUES (@world_uuid, @x, @y, @z, @item_code, @owner_name, @buy_price, @sell_price, @quantity)
+                              quantity,
+                              stock)
+            VALUES (@world_uuid, @x, @y, @z, @item_code, @owner_name, @buy_price, @sell_price, @quantity, @stock)
             ON DUPLICATE KEY UPDATE item_code  = @item_code,
                                     owner_name = @owner_name,
                                     buy_price  = @buy_price,
                                     sell_price = @sell_price,
                                     quantity   = @quantity
+                                    stock      = @stock
             """)
     @Override
     void insertShop(
@@ -74,7 +77,8 @@ public interface MariaChestshopMapper extends DatabaseInterface {
             @Param("owner_name") @Nonnull String ownerName,
             @Param("buy_price") @Nullable Double buyPrice,
             @Param("sell_price") @Nullable Double sellPrice,
-            @Param("quantity") int quantity);
+            @Param("quantity") int quantity,
+            @Param("stock") int stock);
 
     @Override
     @Delete("""

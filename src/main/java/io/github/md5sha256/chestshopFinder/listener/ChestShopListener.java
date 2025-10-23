@@ -6,12 +6,15 @@ import com.Acrobot.ChestShop.Events.ShopCreatedEvent;
 import com.Acrobot.ChestShop.Events.ShopDestroyedEvent;
 import com.Acrobot.ChestShop.Events.TransactionEvent;
 import com.Acrobot.ChestShop.Signs.ChestShopSign;
+import com.Acrobot.ChestShop.Utils.uBlock;
 import io.github.md5sha256.chestshopFinder.ChestShopState;
 import io.github.md5sha256.chestshopFinder.ItemDiscoverer;
 import io.github.md5sha256.chestshopFinder.model.ChestshopItem;
 import io.github.md5sha256.chestshopFinder.model.HydratedShop;
 import io.github.md5sha256.chestshopFinder.util.BlockPosition;
+import io.github.md5sha256.chestshopFinder.util.InventoryUtil;
 import io.github.md5sha256.chestshopFinder.util.UnsafeChestShopSign;
+import org.bukkit.block.Container;
 import org.bukkit.block.Sign;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -40,7 +43,9 @@ public record ChestShopListener(
         UnsafeChestShopSign.init();
     }
 
-    private void toHydratedShop(@Nonnull Sign sign, Consumer<HydratedShop> callback) {
+    private void toHydratedShop(@Nonnull Sign sign,
+                                @Nonnull Container container,
+                                Consumer<HydratedShop> callback) {
         String[] lines = sign.getLines();
         UUID world = sign.getWorld().getUID();
         int posX = sign.getX();
@@ -66,7 +71,8 @@ public record ChestShopListener(
                     owner,
                     buyPrice,
                     sellPrice,
-                    quantity
+                    quantity,
+                    InventoryUtil.countItems(itemStack, container.getInventory())
             );
             callback.accept(shop);
         });
@@ -75,7 +81,12 @@ public record ChestShopListener(
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onChestShopCreated(ShopCreatedEvent event) {
-        toHydratedShop(event.getSign(), this.shopState::queueShopCreation);
+        Sign sign = event.getSign();
+        Container container = uBlock.findConnectedContainer(sign);
+        if (container == null) {
+            return;
+        }
+        toHydratedShop(sign, container, this.shopState::queueShopCreation);
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -91,12 +102,16 @@ public record ChestShopListener(
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onTransaction(TransactionEvent event) {
         Sign sign = event.getSign();
+        Container container = uBlock.findConnectedContainer(sign);
+        if (container == null) {
+            return;
+        }
         UUID world = sign.getWorld().getUID();
         int posX = sign.getX();
         int posY = sign.getY();
         int posZ = sign.getZ();
         if (!this.shopState.cachedShopRegistered(new BlockPosition(world, posX, posY, posZ))) {
-            toHydratedShop(event.getSign(), this.shopState::queueShopCreation);
+            toHydratedShop(sign, container, this.shopState::queueShopCreation);
         }
     }
 

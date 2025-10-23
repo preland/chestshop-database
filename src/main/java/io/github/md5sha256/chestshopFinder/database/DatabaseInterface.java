@@ -41,7 +41,8 @@ public interface DatabaseInterface {
             @Nonnull String ownerName,
             @Nullable Double buyPrice,
             @Nullable Double sellPrice,
-            int quantity);
+            int quantity,
+            int stock);
 
     default void insertShop(@Nonnull Shop shop) {
         insertShop(shop.worldId(),
@@ -52,7 +53,8 @@ public interface DatabaseInterface {
                 shop.ownerName(),
                 shop.buyPrice(),
                 shop.sellPrice(),
-                shop.quantity());
+                shop.quantity(),
+                shop.stock());
     }
 
 
@@ -65,7 +67,8 @@ public interface DatabaseInterface {
                 shop.ownerName(),
                 shop.buyPrice(),
                 shop.sellPrice(),
-                shop.quantity());
+                shop.quantity(),
+                shop.stock());
     }
 
     default void insertShops(@Nonnull List<HydratedShop> shops) {
