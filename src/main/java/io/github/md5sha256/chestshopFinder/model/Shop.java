@@ -1,4 +1,4 @@
-package io.github.md5sha256.chestshopFinder;
+package io.github.md5sha256.chestshopFinder.model;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;

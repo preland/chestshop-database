@@ -1,7 +1,7 @@
-package io.github.md5sha256.chestshopFinder;
+package io.github.md5sha256.chestshopFinder.database;
 
-import org.bukkit.Bukkit;
-import org.bukkit.World;
+import io.github.md5sha256.chestshopFinder.model.Shop;
+import io.github.md5sha256.chestshopFinder.model.ShopType;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;

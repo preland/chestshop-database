@@ -1,6 +1,7 @@
-package io.github.md5sha256.chestshopFinder;
+package io.github.md5sha256.chestshopFinder.database;
 
-import org.bukkit.inventory.ItemStack;
+import io.github.md5sha256.chestshopFinder.model.Shop;
+import io.github.md5sha256.chestshopFinder.model.ShopType;
 
 import javax.annotation.Nonnull;
 import java.sql.Connection;

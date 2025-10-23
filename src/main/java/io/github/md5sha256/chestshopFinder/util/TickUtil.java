@@ -1,4 +1,4 @@
-package io.github.md5sha256.chestshopFinder;
+package io.github.md5sha256.chestshopFinder.util;
 
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitScheduler;

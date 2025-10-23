@@ -1,7 +1,8 @@
-package io.github.md5sha256.chestshopFinder;
+package io.github.md5sha256.chestshopFinder.database;
 
 import com.Acrobot.Breeze.Utils.PriceUtil;
 import com.Acrobot.ChestShop.Signs.ChestShopSign;
+import io.github.md5sha256.chestshopFinder.util.BlockPosition;
 import org.bukkit.inventory.ItemStack;
 
 import javax.annotation.Nonnull;

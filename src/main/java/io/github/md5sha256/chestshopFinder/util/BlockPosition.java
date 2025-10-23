@@ -1,4 +1,4 @@
-package io.github.md5sha256.chestshopFinder;
+package io.github.md5sha256.chestshopFinder.util;
 
 import java.util.UUID;
 
