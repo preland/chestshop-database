@@ -13,7 +13,7 @@ import javax.sql.DataSource;
 public class MariaDatabase {
 
     public SqlSessionFactory buildSessionFactory(@Nonnull DatabaseSettings settings) {
-        DataSource dataSource = new PooledDataSource("", settings.url(), settings.username(), settings.password());
+        DataSource dataSource = new PooledDataSource("org.mariadb.jdbc.Driver", settings.url(), settings.username(), settings.password());
         Environment environment = new Environment("production", new JdbcTransactionFactory(), dataSource);
         Configuration configuration = new Configuration(environment);
         configuration.addMapper(MariaChestshopMapper.class);
