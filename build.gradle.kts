@@ -24,6 +24,7 @@ dependencies {
     compileOnly("com.acrobot.chestshop:chestshop:3.12.2")
     implementation("org.mybatis:mybatis:3.5.19")
     implementation("org.mariadb.jdbc:mariadb-java-client:3.5.6")
+    implementation("org.spongepowered:configurate-yaml:4.1.2")
 }
 
 
@@ -44,6 +45,9 @@ tasks {
         val base = "io.github.md5sha256.chestshopdatabase.libraries"
         relocate("org.mariadb", "${base}.org.mariadb")
         relocate("org.mybatis", "${base}.org.mybatis")
+        relocate("org.spongepowered", "${base}.org.spongepowered")
+        relocate("org.yaml", "${base}.org.yaml")
+        relocate("io.leangen.geantyref", "${base}.io.leangen.geantyref")
     }
     runServer {
         // Configure the Minecraft version for our task.

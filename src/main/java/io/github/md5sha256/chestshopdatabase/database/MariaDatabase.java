@@ -1,5 +1,6 @@
 package io.github.md5sha256.chestshopdatabase.database;
 
+import io.github.md5sha256.chestshopdatabase.settings.DatabaseSettings;
 import org.apache.ibatis.datasource.pooled.PooledDataSource;
 import org.apache.ibatis.mapping.Environment;
 import org.apache.ibatis.session.Configuration;
@@ -23,7 +24,7 @@ public class MariaDatabase {
     }
 
     public static SqlSessionFactory buildSessionFactory(@Nonnull DatabaseSettings settings) {
-        DataSource dataSource = new PooledDataSource("org.mariadb.jdbc.Driver", settings.url(), settings.username(), settings.password());
+        DataSource dataSource = new PooledDataSource("org.mariadb.jdbc.Driver", "jdbc:" + settings.url(), settings.username(), settings.password());
         Environment environment = new Environment("production", new JdbcTransactionFactory(), dataSource);
         Configuration configuration = new Configuration(environment);
         configuration.getTypeHandlerRegistry().register(UUID.class, JdbcType.OTHER, UUIDAsBin16Handler.class);

@@ -4,10 +4,10 @@ import io.github.md5sha256.chestshopdatabase.command.CommandBean;
 import io.github.md5sha256.chestshopdatabase.command.FindShopsCommand;
 import io.github.md5sha256.chestshopdatabase.database.DatabaseMapper;
 import io.github.md5sha256.chestshopdatabase.database.DatabaseSession;
-import io.github.md5sha256.chestshopdatabase.database.DatabaseSettings;
 import io.github.md5sha256.chestshopdatabase.database.MariaChestshopMapper;
 import io.github.md5sha256.chestshopdatabase.database.MariaDatabase;
 import io.github.md5sha256.chestshopdatabase.listener.ChestShopListener;
+import io.github.md5sha256.chestshopdatabase.settings.Settings;
 import io.github.md5sha256.chestshopdatabase.util.UnsafeChestShopSign;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
@@ -15,8 +15,16 @@ import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
+import org.spongepowered.configurate.ConfigurationNode;
+import org.spongepowered.configurate.yaml.NodeStyle;
+import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
 import javax.annotation.Nonnull;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -32,9 +40,18 @@ public final class ChestshopDatabasePlugin extends JavaPlugin {
     private final ExecutorService databaseExecutor = Executors.newVirtualThreadPerTaskExecutor();
     private ChestShopState shopState;
     private ItemDiscoverer discoverer;
+    private Settings settings;
 
-    private DatabaseSettings getDbSettings() {
-        return null;
+    @Override
+    public void onLoad() {
+        try {
+            initDataFolder();
+            this.settings = loadSettings();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
     }
 
     @Override
@@ -46,7 +63,7 @@ public final class ChestshopDatabasePlugin extends JavaPlugin {
         discoverer = new ItemDiscoverer(50, Duration.ofMinutes(5), 50, getServer());
         getServer().getPluginManager()
                 .registerEvents(new ChestShopListener(shopState, discoverer), this);
-        SqlSessionFactory sessionFactory = MariaDatabase.buildSessionFactory(getDbSettings());
+        SqlSessionFactory sessionFactory = MariaDatabase.buildSessionFactory(this.settings.databaseSettings());
         cacheItemCodes(sessionFactory);
         registerCommands(sessionFactory);
         scheduleTasks(sessionFactory);
@@ -67,7 +84,10 @@ public final class ChestshopDatabasePlugin extends JavaPlugin {
     private void registerCommands(@Nonnull SqlSessionFactory sessionFactory) {
         Executor mainThreadExec = getServer().getScheduler().getMainThreadExecutor(this);
         List<CommandBean> commands = List.of(
-                new FindShopsCommand(this.shopState, () -> new DatabaseSession(sessionFactory, MariaChestshopMapper.class), this.databaseExecutor, mainThreadExec)
+                new FindShopsCommand(this.shopState,
+                        () -> new DatabaseSession(sessionFactory, MariaChestshopMapper.class),
+                        this.databaseExecutor,
+                        mainThreadExec)
         );
         this.getLifecycleManager().registerEventHandler(
                 LifecycleEvents.COMMANDS, event -> {
@@ -110,5 +130,42 @@ public final class ChestshopDatabasePlugin extends JavaPlugin {
             });
         }, interval, interval);
         this.discoverer.schedulePollTask(this, scheduler, 20, 5);
+    }
+
+    private void initDataFolder() throws IOException {
+        File dataFolder = getDataFolder();
+        if (!dataFolder.isDirectory()) {
+            Files.createDirectory(dataFolder.toPath());
+        }
+    }
+
+    private ConfigurationNode copyDefaultsYaml(@Nonnull String resourceName) throws IOException {
+        String fileName = resourceName + ".yml";
+        File file = new File(getDataFolder(), fileName);
+        if (!file.exists()) {
+            try (FileOutputStream fileOutputStream = new FileOutputStream(file);
+                 InputStream inputStream = getResource(fileName)) {
+                if (inputStream == null) {
+                    getLogger().severe("Failed to copy default messages!");
+                } else {
+                    inputStream.transferTo(fileOutputStream);
+                }
+            }
+        }
+        YamlConfigurationLoader existingLoader = yamlLoader()
+                .file(file)
+                .build();
+        return existingLoader.load();
+    }
+
+    private YamlConfigurationLoader.Builder yamlLoader() {
+        return YamlConfigurationLoader.builder()
+                //.defaultOptions(options -> options.serializers(Serializers.createDefaults()))
+                .nodeStyle(NodeStyle.BLOCK);
+    }
+
+    private Settings loadSettings() throws IOException {
+        ConfigurationNode settingsRoot = copyDefaultsYaml("settings");
+        return settingsRoot.get(Settings.class);
     }
 }
