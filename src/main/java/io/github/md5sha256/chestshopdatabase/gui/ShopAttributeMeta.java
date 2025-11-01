@@ -16,10 +16,15 @@ public class ShopAttributeMeta {
         this(attribute, SortDirection.ASCENDING, 0);
     }
 
+    public ShopAttributeMeta(@Nonnull ShopAttributeMeta attribute) {
+        this(attribute.attribute, attribute.sortDirection, attribute.weight);
+    }
+
     public ShopAttributeMeta(@Nonnull ShopAttribute attribute,
                              @Nonnull SortDirection sortDirection,
                              int weight) {
         this.attribute = attribute;
+        this.sortDirection = sortDirection;
         this.weight = weight;
     }
 

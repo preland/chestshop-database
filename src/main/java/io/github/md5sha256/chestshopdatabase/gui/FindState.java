@@ -1,5 +1,6 @@
 package io.github.md5sha256.chestshopdatabase.gui;
 
+import io.github.md5sha256.chestshopdatabase.model.ChestshopItem;
 import io.github.md5sha256.chestshopdatabase.model.Shop;
 import io.github.md5sha256.chestshopdatabase.model.ShopAttribute;
 import io.github.md5sha256.chestshopdatabase.model.ShopType;
@@ -27,16 +28,25 @@ public class FindState {
     private final Map<ShopAttribute, ShopAttributeMeta> attributeMeta = new EnumMap<>(
             ShopAttribute.class);
     private final Map<ShopAttribute, Comparator<Shop>> comparators = new EnumMap<>(ShopAttribute.class);
-    private final ItemStack item;
+    private final ChestshopItem item;
 
     public FindState(
-            @Nonnull ItemStack item,
+            @Nonnull ChestshopItem item,
             @Nonnull Map<ShopAttribute, Comparator<Shop>> comparators) {
         this.item = item;
         this.comparators.putAll(comparators);
     }
 
-    public ItemStack item() {
+    public FindState(@Nonnull FindState other) {
+        this.item = other.item;
+        this.shopTypes.addAll(other.shopTypes);
+        for (Map.Entry<ShopAttribute, ShopAttributeMeta> entry : attributeMeta.entrySet()) {
+            this.attributeMeta.put(entry.getKey(), new ShopAttributeMeta(entry.getValue()));
+        }
+        this.comparators.putAll(other.comparators);
+    }
+
+    public ChestshopItem item() {
         return this.item;
     }
 

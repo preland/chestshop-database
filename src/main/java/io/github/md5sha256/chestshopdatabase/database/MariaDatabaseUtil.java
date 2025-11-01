@@ -10,7 +10,7 @@ import java.util.UUID;
 public class MariaDatabaseUtil {
 
     @Nonnull
-    public String selectShopsByItem(@Nonnull ShopType shopType,
+    public String selectShopsByShopTypeItem(@Nonnull ShopType shopType,
                                     @Param("item_code") @Nonnull String itemCode) {
         return new SQL()
                 .SELECT("""
@@ -35,7 +35,7 @@ public class MariaDatabaseUtil {
     }
 
     @Nonnull
-    public String selectShopsByWorldAndItem(@Nonnull ShopType shopType,
+    public String selectShopsByShopTypeWorldItem(@Nonnull ShopType shopType,
                                             @Param("world_uuid") @Nonnull UUID world,
                                             @Param("item_code") @Nonnull String itemCode) {
         return new SQL()
@@ -61,7 +61,7 @@ public class MariaDatabaseUtil {
     }
 
     @Nonnull
-    public String selectShopsByWorldItemDistance(
+    public String selectShopsByShopTypeWorldItemDistance(
             @Nonnull ShopType shopType,
             @Param("world_uuid") @Nonnull UUID world,
             @Param("item_code") @Nonnull String itemCode,

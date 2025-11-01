@@ -97,22 +97,43 @@ public interface MariaChestshopMapper extends DatabaseMapper {
             @Param("z") int z);
 
     @Override
-    @SelectProvider(type = MariaDatabaseUtil.class, method = "selectShopsByItem")
+    @Select("""
+            SELECT
+                CAST(world_uuid AS BINARY(16))
+                pos_x AS posX,
+                pos_y AS posY,
+                pos_z AS posZ,
+                item_code AS itemCode,
+                owner_name AS ownerName,
+                buy_price AS buyPrice,
+                sell_price AS sellPrice,
+                quantity,
+                stock,
+                estimated_capacity AS estimatedCapacity
+            FROM Shop
+            WHERE item_code = #{item_code};
+            """)
     @Nonnull
-    List<Shop> selectShopsByItem(@Nonnull ShopType shopType,
-                                 @Param("item_code") @Nonnull String itemCode);
+    List<Shop> selectShopsByItem(@Param("item_code") @Nonnull String itemCode);
+
 
     @Override
-    @SelectProvider(type = MariaDatabaseUtil.class, method = "selectShopsByWorldAndItem")
+    @SelectProvider(type = MariaDatabaseUtil.class, method = "selectShopsByShopTypeItem")
     @Nonnull
-    List<Shop> selectShopsByWorldAndItem(@Nonnull ShopType shopType,
-                                         @Param("world_uuid") @Nonnull UUID world,
+    List<Shop> selectShopsByShopTypeItem(@Nonnull ShopType shopType,
                                          @Param("item_code") @Nonnull String itemCode);
 
     @Override
-    @SelectProvider(type = MariaDatabaseUtil.class, method = "selectShopsByWorldItemDistance")
+    @SelectProvider(type = MariaDatabaseUtil.class, method = "selectShopsByShopTypeWorldItem")
     @Nonnull
-    List<Shop> selectShopsByWorldItemDistance(
+    List<Shop> selectShopsByShopTypeWorldItem(@Nonnull ShopType shopType,
+                                              @Param("world_uuid") @Nonnull UUID world,
+                                              @Param("item_code") @Nonnull String itemCode);
+
+    @Override
+    @SelectProvider(type = MariaDatabaseUtil.class, method = "selectShopsByShopTypeWorldItemDistance")
+    @Nonnull
+    List<Shop> selectShopsByShopTypeWorldItemDistance(
             @Nonnull ShopType shopType,
             @Param("world_uuid") @Nonnull UUID world,
             @Param("item_code") @Nonnull String itemCode,

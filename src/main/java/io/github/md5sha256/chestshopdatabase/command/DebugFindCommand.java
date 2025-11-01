@@ -39,7 +39,7 @@ public record DebugFindCommand(@Nonnull ChestShopState shopState,
                             String itemCode = ctx.getArgument("itemCode", String.class);
                             CompletableFuture.supplyAsync(() -> {
                                         try (DatabaseSession session = databaseSupplier.get()) {
-                                            return session.mapper().selectShopsByWorldAndItem(
+                                            return session.mapper().selectShopsByShopTypeWorldItem(
                                                     ShopType.BOTH,
                                                     world,
                                                     itemCode);

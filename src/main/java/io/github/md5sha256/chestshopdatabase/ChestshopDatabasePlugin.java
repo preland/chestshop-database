@@ -6,9 +6,10 @@ import io.github.md5sha256.chestshopdatabase.command.DebugFindCommand;
 import io.github.md5sha256.chestshopdatabase.command.FindCommand;
 import io.github.md5sha256.chestshopdatabase.database.DatabaseMapper;
 import io.github.md5sha256.chestshopdatabase.database.DatabaseSession;
+import io.github.md5sha256.chestshopdatabase.database.FindTaskFactory;
 import io.github.md5sha256.chestshopdatabase.database.MariaChestshopMapper;
 import io.github.md5sha256.chestshopdatabase.database.MariaDatabase;
-import io.github.md5sha256.chestshopdatabase.gui.ShopGUI;
+import io.github.md5sha256.chestshopdatabase.gui.ShopResultsGUI;
 import io.github.md5sha256.chestshopdatabase.listener.ChestShopListener;
 import io.github.md5sha256.chestshopdatabase.settings.Settings;
 import io.github.md5sha256.chestshopdatabase.util.UnsafeChestShopSign;
@@ -31,7 +32,6 @@ import java.nio.file.Files;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -45,7 +45,7 @@ public final class ChestshopDatabasePlugin extends JavaPlugin {
     private ChestShopState shopState;
     private ItemDiscoverer discoverer;
     private Settings settings;
-    private ShopGUI gui;
+    private ShopResultsGUI gui;
     private ExecutorState executorState;
 
     @Override
@@ -69,7 +69,7 @@ public final class ChestshopDatabasePlugin extends JavaPlugin {
         discoverer = new ItemDiscoverer(50, Duration.ofMinutes(5), 50, getServer());
         BukkitScheduler scheduler = getServer().getScheduler();
         executorState = new ExecutorState(databaseExecutor, scheduler.getMainThreadExecutor(this));
-        gui = new ShopGUI(this);
+        gui = new ShopResultsGUI(this);
         getServer().getPluginManager()
                 .registerEvents(new ChestShopListener(shopState, discoverer), this);
         SqlSessionFactory sessionFactory = MariaDatabase.buildSessionFactory(this.settings.databaseSettings());
@@ -91,19 +91,18 @@ public final class ChestshopDatabasePlugin extends JavaPlugin {
     }
 
     private void registerCommands(@Nonnull SqlSessionFactory sessionFactory) {
-        Executor mainThreadExec = getServer().getScheduler().getMainThreadExecutor(this);
         Supplier<DatabaseSession> sessionSupplier = () -> new DatabaseSession(sessionFactory,
                 MariaChestshopMapper.class);
+        FindTaskFactory taskFactory = new FindTaskFactory(sessionSupplier, executorState);
         List<CommandBean> commands = List.of(
-                new DebugDialogCommand(),
+                new DebugDialogCommand(taskFactory, gui),
                 new DebugFindCommand(this.shopState,
                         sessionSupplier,
                         this.databaseExecutor,
-                        mainThreadExec),
+                        executorState.mainThreadExec()),
                 new FindCommand(this.shopState,
                         this.discoverer,
-                        sessionSupplier,
-                        this.executorState,
+                        taskFactory,
                         this.gui)
         );
         var csdb = Commands.literal("csdb");

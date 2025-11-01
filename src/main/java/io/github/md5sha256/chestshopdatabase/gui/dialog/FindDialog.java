@@ -1,6 +1,9 @@
 package io.github.md5sha256.chestshopdatabase.gui.dialog;
 
+import com.github.stefvanschie.inventoryframework.gui.type.ChestGui;
+import io.github.md5sha256.chestshopdatabase.database.FindTaskFactory;
 import io.github.md5sha256.chestshopdatabase.gui.FindState;
+import io.github.md5sha256.chestshopdatabase.gui.ShopResultsGUI;
 import io.github.md5sha256.chestshopdatabase.util.DialogUtil;
 import io.papermc.paper.dialog.Dialog;
 import io.papermc.paper.registry.data.dialog.ActionButton;
@@ -10,6 +13,8 @@ import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickCallback;
+import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import javax.annotation.Nonnull;
@@ -45,11 +50,32 @@ public class FindDialog {
 
     @Nonnull
     public static Dialog createMainPageDialog(
-            @Nonnull FindState findState
+            @Nonnull FindState findState,
+            @Nonnull FindTaskFactory taskFactory,
+            @Nonnull ShopResultsGUI resultsGUI
     ) {
         DialogAction submitAction = DialogAction.customClick((view, audience) -> {
             audience.closeDialog();
             audience.showDialog(waitScreen());
+            if (!(audience instanceof Player player)) {
+                return;
+            }
+            taskFactory.findTask(findState).whenComplete((res, ex) -> {
+                if (ex != null) {
+                    ex.printStackTrace();
+                    audience.closeDialog();
+                    audience.sendMessage(Component.text("Internal error when querying shops!",
+                            NamedTextColor.RED));
+                    return;
+                }
+                if (res.isEmpty()) {
+                    audience.sendMessage(Component.text("No shops found!", NamedTextColor.RED));
+                    return;
+                }
+                Component title = Component.text("Shop results for " + findState.item().itemCode());
+                ChestGui chestGui = resultsGUI.createGui(title, res, findState.item().itemStack());
+                chestGui.show(player);
+            });
         }, ClickCallback.Options.builder().uses(1).build());
         ActionButton submitButton = ActionButton.builder(Component.text("Submit Query"))
                 .action(submitAction)
@@ -60,18 +86,20 @@ public class FindDialog {
         List<ActionButton> actions = List.of(
                 ActionButton.builder(Component.text("Filters"))
                         .action(DialogUtil.openDialogAction(() -> FilterDialog.createFiltersDialog(
-                                findState, () -> createMainPageDialog(findState))))
+                                findState,
+                                () -> createMainPageDialog(findState, taskFactory, resultsGUI))))
                         .build(),
                 ActionButton.builder(Component.text("Sorting"))
                         .action(DialogUtil.openDialogAction(() -> SortDialog.createSortDialog(
-                                findState, () -> createMainPageDialog(findState))))
+                                findState,
+                                () -> createMainPageDialog(findState, taskFactory, resultsGUI))))
                         .build(),
                 exitButton
         );
 
         return Dialog.create(factory ->
                 factory.empty()
-                        .base(createMainPageBase(findState.item()))
+                        .base(createMainPageBase(findState.item().itemStack()))
                         .type(DialogType.multiAction(actions)
                                 .exitAction(submitButton)
                                 .columns(1)

@@ -2,10 +2,12 @@ package io.github.md5sha256.chestshopdatabase.command;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import io.github.md5sha256.chestshopdatabase.database.FindTaskFactory;
 import io.github.md5sha256.chestshopdatabase.gui.FindState;
 import io.github.md5sha256.chestshopdatabase.gui.ShopComparators;
+import io.github.md5sha256.chestshopdatabase.gui.ShopResultsGUI;
 import io.github.md5sha256.chestshopdatabase.gui.dialog.FindDialog;
-import io.github.md5sha256.chestshopdatabase.model.ShopType;
+import io.github.md5sha256.chestshopdatabase.model.ChestshopItem;
 import io.github.md5sha256.chestshopdatabase.util.BlockPosition;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
@@ -15,9 +17,11 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.EnumSet;
+import javax.annotation.Nonnull;
 
-public record DebugDialogCommand() implements CommandBean.Single {
+public record DebugDialogCommand(
+        @Nonnull FindTaskFactory taskFactory,
+        @Nonnull ShopResultsGUI gui) implements CommandBean.Single {
 
     @Override
     public @NotNull LiteralArgumentBuilder<CommandSourceStack> command() {
@@ -33,11 +37,11 @@ public record DebugDialogCommand() implements CommandBean.Single {
                             pos.blockY(),
                             pos.blockX());
                     FindState findState = new FindState(
-                            ItemStack.of(Material.DIAMOND),
+                            new ChestshopItem(ItemStack.of(Material.DIAMOND), "Diamond"),
                             new ShopComparators().withDistance(blockPos).build()
                     );
                     findState.reset();
-                    Dialog dialog = FindDialog.createMainPageDialog(findState);
+                    Dialog dialog = FindDialog.createMainPageDialog(findState, taskFactory, gui);
                     player.showDialog(dialog);
                     return Command.SINGLE_SUCCESS;
                 });

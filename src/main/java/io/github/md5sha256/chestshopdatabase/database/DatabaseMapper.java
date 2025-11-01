@@ -93,15 +93,18 @@ public interface DatabaseMapper {
     }
 
     @Nonnull
-    List<Shop> selectShopsByItem(@Nonnull ShopType shopType, @Nonnull String itemCode);
+    List<Shop> selectShopsByItem(@Nonnull String itemCode);
 
     @Nonnull
-    List<Shop> selectShopsByWorldAndItem(@Nonnull ShopType shopType,
-                                         @Nonnull UUID world,
-                                         @Nonnull String itemCode);
+    List<Shop> selectShopsByShopTypeItem(@Nonnull ShopType shopType, @Nonnull String itemCode);
 
     @Nonnull
-    List<Shop> selectShopsByWorldItemDistance(
+    List<Shop> selectShopsByShopTypeWorldItem(@Nonnull ShopType shopType,
+                                              @Nonnull UUID world,
+                                              @Nonnull String itemCode);
+
+    @Nonnull
+    List<Shop> selectShopsByShopTypeWorldItemDistance(
             @Nonnull ShopType shopType,
             @Nonnull UUID world,
             @Nonnull String itemCode,

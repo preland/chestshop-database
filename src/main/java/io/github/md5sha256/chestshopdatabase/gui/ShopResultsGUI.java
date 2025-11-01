@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
-public record ShopGUI(@Nonnull Plugin plugin) {
+public record ShopResultsGUI(@Nonnull Plugin plugin) {
 
     private static String priceToString(Double price) {
         return price == null ? "N/A" : price.toString();
@@ -67,7 +67,7 @@ public record ShopGUI(@Nonnull Plugin plugin) {
                         shop.posX(),
                         shop.posY(),
                         shop.posZ()), NamedTextColor.RED)
-        ).map(ShopGUI::formatLore).toList();
+        ).map(ShopResultsGUI::formatLore).toList();
     }
 
     private ItemStack shopToIcon(@Nonnull Shop shop) {
