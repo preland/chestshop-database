@@ -99,7 +99,7 @@ public interface MariaChestshopMapper extends DatabaseMapper {
     @Override
     @Select("""
             SELECT
-                CAST(world_uuid AS BINARY(16))
+                CAST(world_uuid AS BINARY(16)) AS worldID,
                 pos_x AS posX,
                 pos_y AS posY,
                 pos_z AS posZ,
