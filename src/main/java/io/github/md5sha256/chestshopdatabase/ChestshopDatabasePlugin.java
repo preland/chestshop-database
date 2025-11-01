@@ -1,6 +1,7 @@
 package io.github.md5sha256.chestshopdatabase;
 
 import io.github.md5sha256.chestshopdatabase.command.CommandBean;
+import io.github.md5sha256.chestshopdatabase.command.DebugDialogCommand;
 import io.github.md5sha256.chestshopdatabase.command.DebugFindCommand;
 import io.github.md5sha256.chestshopdatabase.command.FindCommand;
 import io.github.md5sha256.chestshopdatabase.database.DatabaseMapper;
@@ -94,6 +95,7 @@ public final class ChestshopDatabasePlugin extends JavaPlugin {
         Supplier<DatabaseSession> sessionSupplier = () -> new DatabaseSession(sessionFactory,
                 MariaChestshopMapper.class);
         List<CommandBean> commands = List.of(
+                new DebugDialogCommand(),
                 new DebugFindCommand(this.shopState,
                         sessionSupplier,
                         this.databaseExecutor,
@@ -104,14 +106,13 @@ public final class ChestshopDatabasePlugin extends JavaPlugin {
                         this.executorState,
                         this.gui)
         );
+        var csdb = Commands.literal("csdb");
         this.getLifecycleManager().registerEventHandler(
-                LifecycleEvents.COMMANDS, event -> {
-                    commands.stream()
-                            .map(CommandBean::commands)
-                            .flatMap(List::stream)
-                            .map(literal -> Commands.literal("csdb").then(literal).build())
-                            .forEach(event.registrar()::register);
-                }
+                LifecycleEvents.COMMANDS, event -> commands.stream()
+                        .map(CommandBean::commands)
+                        .flatMap(List::stream)
+                        .map(literal -> csdb.then(literal).build())
+                        .forEach(event.registrar()::register)
         );
     }
 
