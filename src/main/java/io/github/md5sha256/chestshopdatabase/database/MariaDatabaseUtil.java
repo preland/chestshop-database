@@ -17,8 +17,9 @@ public class MariaDatabaseUtil {
     public String selectShopsByShopTypeItem(@Nonnull Set<ShopType> shopTypes,
                                             @Param("item_code") @Nullable String itemCode) {
         boolean notAllTypes = shopTypes.size() != NUM_SHOP_TYPES;
-        boolean filterBuy = shopTypes.contains(ShopType.BUY) || shopTypes.contains(ShopType.BOTH);
-        boolean filterSell = shopTypes.contains(ShopType.SELL) || shopTypes.contains(ShopType.BOTH);
+        boolean filterBuy = shopTypes.contains(ShopType.BUY);
+        boolean filterSell = shopTypes.contains(ShopType.SELL);
+        boolean filterBoth = shopTypes.contains(ShopType.BOTH);
         return new SQL()
                 .SELECT("""
                         CAST(world_uuid AS BINARY(16)) as worldID,
@@ -35,8 +36,21 @@ public class MariaDatabaseUtil {
                         """)
                 .FROM("Shop")
                 .applyIf(itemCode != null, sql -> sql.WHERE("item_code = #{item_code}"))
-                .applyIf(notAllTypes && filterBuy, sql -> sql.WHERE("buy_price IS NOT NULL", "stock > 0"))
-                .applyIf(notAllTypes && filterSell, sql -> sql.WHERE("sell_price IS NOT NULL", "estimated_capacity > 0"))
+                .applyIf(notAllTypes, sql -> {
+                        if (filterBuy && !filterSell && !filterBoth) {
+                                sql.WHERE("buy_price IS NOT NULL", "stock > 0");
+                        } else if (!filterBuy && filterSell && !filterBoth) {
+                                sql.WHERE("sell_price IS NOT NULL", "estimated_capacity > 0");
+                        } else if (!filterBuy && !filterSell && filterBoth) {
+                                sql.WHERE("buy_price IS NOT NULL", "sell_price IS NOT NULL", "stock > 0", "estimated_capacity > 0");
+                        } else if (filterBuy && !filterSell && filterBoth) {
+                                sql.WHERE("buy_price IS NOT NULL", "stock > 0");
+                        } else if (!filterBuy && filterSell && filterBoth) {
+                                sql.WHERE("sell_price IS NOT NULL", "estimated_capacity > 0");
+                        } else if (filterBuy && filterSell && !filterBoth) {
+                                sql.WHERE("(buy_price IS NOT NULL AND sell_price IS NULL AND stock > 0) OR (sell_price IS NOT NULL AND buy_price IS NULL AND estimated_capacity > 0)");
+                        }
+                })
                 .toString();
     }
 
@@ -45,8 +59,9 @@ public class MariaDatabaseUtil {
                                                  @Param("world_uuid") @Nullable UUID world,
                                                  @Param("item_code") @Nullable String itemCode) {
         boolean notAllTypes = shopTypes.size() != NUM_SHOP_TYPES;
-        boolean filterBuy = shopTypes.contains(ShopType.BUY) || shopTypes.contains(ShopType.BOTH);
-        boolean filterSell = shopTypes.contains(ShopType.SELL) || shopTypes.contains(ShopType.BOTH);
+        boolean filterBuy = shopTypes.contains(ShopType.BUY);
+        boolean filterSell = shopTypes.contains(ShopType.SELL);
+        boolean filterBoth = shopTypes.contains(ShopType.BOTH);
         return new SQL()
                 .SELECT("""
                         CAST(world_uuid AS BINARY(16)) AS worldID,
@@ -63,11 +78,22 @@ public class MariaDatabaseUtil {
                         """)
                 .FROM("Shop")
                 .applyIf(itemCode != null, sql -> sql.WHERE("item_code = #{item_code}"))
-                .applyIf(world != null,
-                        sql -> sql.WHERE(
-                                "world_uuid = #{world_uuid, javaType=java.util.UUID, jdbcType=OTHER}"))
-                .applyIf(notAllTypes && filterBuy, sql -> sql.WHERE("buy_price IS NOT NULL", "stock > 0"))
-                .applyIf(notAllTypes && filterSell, sql -> sql.WHERE("sell_price IS NOT NULL", "estimated_capacity > 0"))
+                .applyIf(world != null, sql -> sql.WHERE( "world_uuid = #{world_uuid, javaType=java.util.UUID, jdbcType=OTHER}"))
+                .applyIf(notAllTypes, sql -> {
+                        if (filterBuy && !filterSell && !filterBoth) {
+                                sql.WHERE("buy_price IS NOT NULL", "stock > 0");
+                        } else if (!filterBuy && filterSell && !filterBoth) {
+                                sql.WHERE("sell_price IS NOT NULL", "estimated_capacity > 0");
+                        } else if (!filterBuy && !filterSell && filterBoth) {
+                                sql.WHERE("buy_price IS NOT NULL", "sell_price IS NOT NULL", "stock > 0", "estimated_capacity > 0");
+                        } else if (filterBuy && !filterSell && filterBoth) {
+                                sql.WHERE("buy_price IS NOT NULL", "stock > 0");
+                        } else if (!filterBuy && filterSell && filterBoth) {
+                                sql.WHERE("sell_price IS NOT NULL", "estimated_capacity > 0");
+                        } else if (filterBuy && filterSell && !filterBoth) {
+                                sql.WHERE("(buy_price IS NOT NULL AND sell_price IS NULL AND stock > 0) OR (sell_price IS NOT NULL AND buy_price IS NULL AND estimated_capacity > 0)");
+                        }
+                })
                 .toString();
     }
 
