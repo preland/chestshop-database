@@ -3,11 +3,11 @@ package io.github.md5sha256.chestshopdatabase;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import io.github.md5sha256.chestshopdatabase.command.CommandBean;
 import io.github.md5sha256.chestshopdatabase.command.FindCommand;
+import io.github.md5sha256.chestshopdatabase.command.ReloadCommand;
 import io.github.md5sha256.chestshopdatabase.database.DatabaseMapper;
 import io.github.md5sha256.chestshopdatabase.database.DatabaseSession;
 import io.github.md5sha256.chestshopdatabase.database.FindTaskFactory;
-import io.github.md5sha256.chestshopdatabase.database.MariaChestshopMapper;
-import io.github.md5sha256.chestshopdatabase.database.MariaDatabase;
+import io.github.md5sha256.chestshopdatabase.database.DatabaseFactory;
 import io.github.md5sha256.chestshopdatabase.gui.ShopResultsGUI;
 import io.github.md5sha256.chestshopdatabase.listener.ChestShopListener;
 import io.github.md5sha256.chestshopdatabase.listener.WorldEditHandler;
@@ -74,10 +74,11 @@ public final class ChestshopDatabasePlugin extends JavaPlugin {
         gui = new ShopResultsGUI(this, settings);
         getServer().getPluginManager()
                 .registerEvents(new ChestShopListener(shopState, discoverer), this);
-        SqlSessionFactory sessionFactory = MariaDatabase.buildSessionFactory(this.settings.databaseSettings());
-        cacheItemCodes(sessionFactory);
-        registerCommands(sessionFactory);
-        scheduleTasks(sessionFactory);
+    SqlSessionFactory sessionFactory = DatabaseFactory.buildSessionFactory(this.settings.databaseSettings());
+    Class<? extends DatabaseMapper> mapperClass = DatabaseFactory.mapperClassFor(this.settings.databaseSettings());
+    cacheItemCodes(sessionFactory, mapperClass);
+    registerCommands(sessionFactory, mapperClass);
+    scheduleTasks(sessionFactory, mapperClass);
         if (isWorldeditPresent()) {
             new WorldEditHandler(this, this.shopState);
         }
@@ -101,16 +102,17 @@ public final class ChestshopDatabasePlugin extends JavaPlugin {
                 || pluginManager.getPlugin("FastAsyncWorldEdit") != null;
     }
 
-    private void registerCommands(@Nonnull SqlSessionFactory sessionFactory) {
-        Supplier<DatabaseSession> sessionSupplier = () -> new DatabaseSession(sessionFactory,
-                MariaChestshopMapper.class);
+    private void registerCommands(@Nonnull SqlSessionFactory sessionFactory, Class<? extends DatabaseMapper> mapperClass) {
+        Supplier<DatabaseSession> sessionSupplier = () -> new DatabaseSession(sessionFactory, mapperClass);
         FindTaskFactory taskFactory = new FindTaskFactory(sessionSupplier, executorState);
         var findCommand = new FindCommand(this.shopState,
                 this.discoverer,
                 taskFactory,
                 this.gui);
+        var reloadCommand = new ReloadCommand(this);
         List<CommandBean> commands = List.of(
-                findCommand
+                findCommand,
+                reloadCommand
         );
         var csdb = Commands.literal("csdb");
         this.getLifecycleManager().registerEventHandler(
@@ -127,14 +129,14 @@ public final class ChestshopDatabasePlugin extends JavaPlugin {
         );
     }
 
-    private void cacheItemCodes(@Nonnull SqlSessionFactory sessionFactory) {
+    private void cacheItemCodes(@Nonnull SqlSessionFactory sessionFactory, Class<? extends DatabaseMapper> mapperClass) {
         try (SqlSession session = sessionFactory.openSession()) {
-            DatabaseMapper database = session.getMapper(MariaChestshopMapper.class);
+            DatabaseMapper database = session.getMapper(mapperClass);
             this.shopState.cacheItemCodes(getLogger(), database);
         }
     }
 
-    private void scheduleTasks(@Nonnull SqlSessionFactory sessionFactory) {
+    private void scheduleTasks(@Nonnull SqlSessionFactory sessionFactory, Class<? extends DatabaseMapper> mapperClass) {
         BukkitScheduler scheduler = getServer().getScheduler();
         Logger logger = getLogger();
         long interval = 1;
@@ -146,7 +148,7 @@ public final class ChestshopDatabasePlugin extends JavaPlugin {
             logger.info("Beginning flush task...");
             CompletableFuture.runAsync(() -> {
                 try (SqlSession session = sessionFactory.openSession(ExecutorType.BATCH, false)) {
-                    DatabaseMapper databaseMapper = session.getMapper(MariaChestshopMapper.class);
+                    DatabaseMapper databaseMapper = session.getMapper(mapperClass);
                     flushTask.accept(databaseMapper);
                     session.commit();
                 } catch (Exception ex) {
@@ -194,5 +196,11 @@ public final class ChestshopDatabasePlugin extends JavaPlugin {
     private Settings loadSettings() throws IOException {
         ConfigurationNode settingsRoot = copyDefaultsYaml("settings");
         return settingsRoot.get(Settings.class);
+    }
+
+    public void reloadPlugin() throws IOException {
+        getLogger().info("Reloading plugin configuration...");
+        this.settings = loadSettings();
+        getLogger().info("Configuration reloaded successfully!");
     }
 }
