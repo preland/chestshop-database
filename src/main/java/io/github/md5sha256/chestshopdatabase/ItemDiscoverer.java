@@ -66,10 +66,7 @@ public class ItemDiscoverer {
             ItemParseEvent parseEvent = new ItemParseEvent(code);
             pluginManager.callEvent(parseEvent);
             ItemStack itemStack = parseEvent.getItem();
-            if (itemStack != null) {
-                this.cachedItemCodes.put(code, itemStack);
-            }
-            triggerCallbacks(code, itemStack);
+            markDiscovery(code, itemStack);
         }
     }
 
@@ -81,14 +78,17 @@ public class ItemDiscoverer {
             ItemStringQueryEvent parseEvent = new ItemStringQueryEvent(item);
             pluginManager.callEvent(parseEvent);
             String itemCode = parseEvent.getItemString();
-            if (itemCode != null) {
-                this.cachedItemCodes.put(itemCode, item);
-            }
-            triggerCallbacks(itemCode, item);
+            markDiscovery(itemCode, item);
         }
     }
 
-    private void triggerCallbacks(@Nullable String code, @Nullable ItemStack itemStack) {
+
+
+    private void markDiscovery(@Nullable String code, @Nullable ItemStack itemStack) {
+        if (code != null && itemStack != null) {
+            this.cachedItemCodes.put(code, itemStack);
+            this.cachedItemStacks.put(itemStack, code);
+        }
         if (code != null) {
             List<Consumer<ItemStack>> itemStackConsumers = this.itemCodeCallbacks.remove(code);
             if (itemStackConsumers != null) {
